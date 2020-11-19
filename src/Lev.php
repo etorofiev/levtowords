@@ -6,7 +6,7 @@ class Lev
 {
     private string $amount;
 
-    public function __construct($amount, string $decimalSeparator = '.')
+    public function __construct($amount)
     {
         $this->amount = (string) $amount;
         $this->amount = str_replace(',', '.', $this->amount);
