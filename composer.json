@@ -1,0 +1,19 @@
+{
+  "name": "northbridg3/levtowords",
+  "description": "Converts a number to BGN (New Bulgarian Lev) words description. Useful for generating invoices.",
+  "keywords": ["money", "invoice", "words", "lev", "bgn"],
+  "homepage": "https://github.com/etorofiev/levtowords",
+  "license": "WTFPL",
+  "authors": [
+    {
+      "name": "Emil Torofiev",
+      "email": "etorofiev@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^7.4"
+  },
+  "autoload": {
+    "psr-4": {"Northbridg3\\Levtowords\\": "src/"}
+  }
+}
