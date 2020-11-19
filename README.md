@@ -12,4 +12,4 @@ Make sure you are running PHP >= 7.4
 
 `$levConverter = new Lev(12.34);`
 
-`echo $lev->toWords(); // "дванадесет лева и тридесет и четири стотинки`
+`echo $levConverter->toWords(); // "дванадесет лева и тридесет и четири стотинки`
