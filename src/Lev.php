@@ -4,44 +4,66 @@ namespace Northbridg3\Levtowords;
 
 class Lev
 {
-    private int $amount;
+    private string $amount;
 
-    public function __construct(int $amount)
+    public function __construct($amount, string $decimalSeparator = '.')
     {
-        $this->amount = $amount;
+        $this->amount = (string) $amount;
+        $this->amount = str_replace(',', '.', $this->amount);
     }
 
     public function toWords()
     {
-        $stringAmount = (string) $this->amount;
-        $chunks = array_reverse(array_map(fn ($x) => strrev($x), str_split(strrev($stringAmount), 3)));
+        $decimalSeparatorPos = strpos($this->amount, '.');
+
+        if ($decimalSeparatorPos === false) {
+            $hasCoins = false;
+            $amount = $this->amount;
+        } else {
+            $hasCoins = true;
+            $parts = explode('.', $this->amount);
+            $coins = str_pad(array_pop($parts), 3, '0', STR_PAD_LEFT);
+            $amount = array_pop($parts);
+        }
+
+        $chunks = array_reverse(array_map(fn ($x) => strrev($x), str_split(strrev($amount), 3)));
 
         $levsWords = [];
         $thousandsWords = [];
         $millionsWords = [];
 
-        $levs = array_pop($chunks);
+        $levs = str_pad(array_pop($chunks), 3, '0', STR_PAD_LEFT);
         $levWords = $this->tripletToWords($levs);
-
-        if (!empty($chunks)) {
-            $thousandsWords = $this->tripletToWords(array_pop($chunks), true, $this->amount < 2000);
-        }
-
-        if (!empty($chunks)) {
-            $millionsWords = $this->tripletToWords(array_pop($chunks));
-        }
-
         $levString = $this->glueMoneyWords($levWords);
-        $thousandsString = $this->glueMoneyWords($thousandsWords, $this->amount >= 2000 ? 'хиляди' : '');
-        $millionsString = $this->glueMoneyWords($millionsWords, 'милиона');
 
-        $allFilledParts = array_filter([$millionsString, $thousandsString, $levString], fn ($x) => !empty($x));
+        if (!empty($chunks)) {
+            $thousands = str_pad(array_pop($chunks), 3, '0', STR_PAD_LEFT);
+            $standAloneThousand = $thousands === '001';
+            $thousandsWords = $this->tripletToWords($thousands, true, $standAloneThousand);
+            $thousandsString = $this->glueMoneyWords($thousandsWords, $standAloneThousand ? '' : 'хиляди');
+        }
+
+        if (!empty($chunks)) {
+            $millions = str_pad(array_pop($chunks), 3, '0', STR_PAD_LEFT);
+            $standAloneMillion = $millions === '001';
+            $millionsWords = $this->tripletToWords($millions);
+            $millionsString = $this->glueMoneyWords($millionsWords, $standAloneMillion ? 'милион' : 'милиона');
+        }
+
+        $allFilledParts = array_filter([$millionsString ?? null, $thousandsString ?? null, $levString], fn ($x) => !empty($x));
 
         $lastPart = array_pop($allFilledParts);
         $remainingParts = implode(' ', $allFilledParts);
 
         $result = empty($remainingParts) ? $lastPart : (strpos($lastPart, ' и ') === false ? $remainingParts . ' и ' . $lastPart : $remainingParts . ' ' . $lastPart);
-        $result .= $this->amount === 1 ? ' лев' : ' лева';
+        $result .= $amount === '1' ? ' лев' : ' лева';
+
+        if ($hasCoins and $coins !== '000') {
+            $coinsWords = $this->tripletToWords($coins, true);
+            $coinsString = $this->glueMoneyWords($coinsWords);
+            $result .= empty($result) ? $coinsString : ' и '. $coinsString;
+            $result .= $coins === '001' ? ' стотинка' : ' стотинки';
+        }
 
         return $result;
     }
@@ -74,7 +96,7 @@ class Lev
         }
     }
 
-    private function tripletToWords(string $levs, bool $thousands = false, bool $standAloneThousand = false): array
+    private function tripletToWords(string $levs, bool $thousands = false, bool $standAlone = false): array
     {
         $words = '';
         $hundreds = null;
@@ -135,7 +157,7 @@ class Lev
 
         if ($tens !== '1') {
             switch ($ones) {
-                case '1' : $onesText = (($thousands and $standAloneThousand) ? 'хиляда' : ($thousands ? 'една' : 'един')); break;
+                case '1' : $onesText = (($thousands and $standAlone) ? 'хиляда' : ($thousands ? 'една' : 'един')); break;
                 case '2' : $onesText = $thousands ? 'две' : 'два'; break;
                 case '3' : $onesText = 'три'; break;
                 case '4' : $onesText = 'четири'; break;
