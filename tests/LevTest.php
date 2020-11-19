@@ -7,12 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class LevTest extends TestCase
 {
-    public function __construct()
-    {
-        require 'vendor/autoload.php';
-        parent::__construct();
-    }
-
     public function testLevs()
     {
         $values = [
