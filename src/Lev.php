@@ -10,6 +10,13 @@ class Lev
     {
         $this->amount = (string) $amount;
         $this->amount = str_replace(',', '.', $this->amount);
+
+        $parts = explode('.', $this->amount);
+        $wholePart = reset($parts);
+
+        if (strlen($wholePart) > 9) {
+            throw new \LengthException('Numbers equal to or bigger than 1 billion are not supported.');
+        }
     }
 
     public function toWords()
@@ -22,7 +29,7 @@ class Lev
         } else {
             $hasCoins = true;
             $parts = explode('.', $this->amount);
-            $coins = str_pad(array_pop($parts), 3, '0', STR_PAD_LEFT);
+            $coins = str_pad(array_pop($parts), 2, '0', STR_PAD_RIGHT);
             $amount = array_pop($parts);
         }
 
@@ -57,12 +64,13 @@ class Lev
 
         $result = empty($remainingParts) ? $lastPart : (strpos($lastPart, ' и ') === false ? $remainingParts . ' и ' . $lastPart : $remainingParts . ' ' . $lastPart);
         $result .= $amount === '1' ? ' лев' : ' лева';
+        $result = $amount !== '0' ? $result : '';
 
         if ($hasCoins and $coins !== '000') {
             $coinsWords = $this->tripletToWords($coins, true);
             $coinsString = $this->glueMoneyWords($coinsWords);
             $result .= empty($result) ? $coinsString : ' и '. $coinsString;
-            $result .= $coins === '001' ? ' стотинка' : ' стотинки';
+            $result .= $coins === '01' ? ' стотинка' : ' стотинки';
         }
 
         return $result;
@@ -98,7 +106,6 @@ class Lev
 
     private function tripletToWords(string $levs, bool $thousands = false, bool $standAlone = false): array
     {
-        $words = '';
         $hundreds = null;
         $tens = null;
         $ones = null;
